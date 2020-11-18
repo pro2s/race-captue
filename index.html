@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <meta charset="utf-8">
+    <meta name="description" content="WebRTC code samples">
+    <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
+    <meta itemprop="description" content="Client-side WebRTC code samples">
+    <meta itemprop="name" content="WebRTC code samples">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta id="theme-color" name="theme-color" content="#ffffff">
+
+    <base target="_blank">
+
+    <title>Video to Canvas to video</title>
+
+    <link rel="stylesheet" href="./css/main.css"/>
+
+</head>
+
+<body>
+
+<div id="container">
+
+    <h1>
+        <a href="//webrtc.github.io/samples/" title="WebRTC samples homepage">Race capture</a>
+    </h1>
+
+    <video id="source" autoplay style="display: none;"></video>
+
+    <canvas id="canvas-source"></canvas>
+    <div>
+        <button onclick="start()">Start</button>
+        <button onclick="stop()">Stop</button>
+    </div>
+</div>
+
+<script src="./js/main.js"></script>
+
+</body>
+</html>
