@@ -5,7 +5,6 @@ const source = document.querySelector('#source');
 // TODO(hta): Use OffscreenCanvas for the intermediate canvases.
 const canvasIn = document.querySelector('#canvas-source');
 
-let inputStream = null;
 let imageData = null;
 let startTime = null;
 let isStart = false;
@@ -54,11 +53,23 @@ function loop(timer) {
   }
   window.requestAnimationFrame(loop);
 }
-
-(async () => {
-  inputStream = await navigator.mediaDevices.getUserMedia({video: true});
-  source.srcObject = inputStream;
+const go = async (deviceId) => {
+  source.srcObject = await navigator.mediaDevices.getUserMedia({video: {deviceId}});
   source.play();
 
   window.requestAnimationFrame(loop);
+}
+
+(async () => {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+
+  for (const device of devices) {
+    if (device.kind == 'videoinput') {
+      const startButton = document.createElement('button');
+      startButton.innerText = device.label;
+      const deviceId = device.deviceId;
+      startButton.addEventListener('click', () => go(deviceId));
+      canvasIn.after(startButton);
+    }
+  }
 })();
