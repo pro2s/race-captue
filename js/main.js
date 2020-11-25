@@ -13,16 +13,38 @@ let frameHash = 0;
 let actualHash = 0;
 let detectAt = 0;
 let countDown = 0;
+let forceStop = null;
 
 function start() {
+    startRecording(canvasIn.captureStream(25))
     frameHash = 0;
     isStart = true;
     result = '';
+    forceStop = null;
 }
 
 function stop() {
+    stopRecording()
     isStart = false;
     startTime = null;
+}
+
+function download() {
+  if (!recordedBlobs || recordedBlobs.length === 0) {
+    return;
+  }
+  const blob = new Blob(recordedBlobs, {type: 'video/webm'});
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = url;
+  a.download = 'test.webm';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }, 100);
 }
 
 function detecttMotion(ctx, x, y, w, h) {
@@ -36,13 +58,22 @@ function detecttMotion(ctx, x, y, w, h) {
     }
     hash += sum / 400;
   }
-  actualHash = hash
+  actualHash = Math.trunc(hash)
   if (frameHash === 0) {
     frameHash = hash;
     return false;
   }
 
-  return Math.abs(frameHash - hash) > Math.abs(frameHash + hash) / 2;
+  const result =  Math.abs(Math.abs(hash) / Math.abs(frameHash)) > 2;
+  ctx.fillStyle = 'black';
+  ctx.fillRect(x, y + h, w, 25);
+
+  ctx.fillStyle = 'white';
+  ctx.font = "20px serif";
+  ctx.strokeStyle = 'black';
+  ctx.fillText(`${frameHash}-${hash}-${result ? "✓" : "✗"}`, x + w - 10, y + h + 20);
+
+  return result;
 }
 
 function formatTimer(timer) {
@@ -72,7 +103,7 @@ function loop(timer) {
     ctx.font = "40px serif";
     ctx.textAlign = 'right';
 
-    if (isStart) {
+    if (!forceStop && isStart) {
         strokeMotion = "green";
         if (detecttMotion(ctx, ...motionArea)) {
           strokeMotion = "red";
@@ -92,7 +123,14 @@ function loop(timer) {
             countDown !== 0 && countDown !== isStart && beep && beep();
             ctx.fillText(isStart, source.videoWidth - 10, source.videoHeight - 50);
           } else {
-            ctx.fillText("GO!", source.videoWidth - 10, source.videoHeight - 50);
+            ctx.fillText("STOP!", source.videoWidth - 10, source.videoHeight - 50);
+            if (!forceStop) {
+              forceStop = formatTimer(timer - startTime);
+              setTimeout(() => {
+                stop();
+                forceStop = null;
+              }, 3000);
+            }
           }
 
           if (countDown !== isStart) {
@@ -100,14 +138,20 @@ function loop(timer) {
           }
         }
 
-        ctx.fillStyle = 'black';
         result = formatTimer(timer - startTime);
+
+        ctx.font = "40px serif";
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 4;
+        ctx.strokeText(result, source.videoWidth - 10, source.videoHeight - 10);
+        ctx.fillStyle = 'white';
         ctx.fillText(result, source.videoWidth - 10, source.videoHeight - 10);
+        ctx.strokeStyle = ""
     }
 
-    if (!isStart && result !== '') {
+    if (forceStop || (!isStart && result !== '')) {
         ctx.fillStyle = '#00FF00';
-        ctx.fillText(result, source.videoWidth - 10, source.videoHeight - 10);
+        ctx.fillText(forceStop ? forceStop : result, source.videoWidth - 10, source.videoHeight - 10);
     }
 
     ctx.strokeStyle = strokeMotion;
