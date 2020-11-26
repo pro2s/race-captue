@@ -4,6 +4,7 @@
 
 let mediaRecorder;
 let recordedBlobs;
+let recording = false;
 
 function handleDataAvailable(event) {
   console.log('handleDataAvailable', event);
@@ -13,6 +14,7 @@ function handleDataAvailable(event) {
 }
 
 function startRecording(stream) {
+  recording = true;
   recordedBlobs = [];
   let options = {mimeType: 'video/webm;codecs=vp9,opus'};
   if (!MediaRecorder.isTypeSupported(options.mimeType)) {
@@ -47,5 +49,8 @@ function startRecording(stream) {
 }
 
 function stopRecording() {
-  mediaRecorder.stop();
+  recording = false;
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
 }
